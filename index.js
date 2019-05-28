@@ -56,35 +56,17 @@ app.post('/kookapp', (request, response) => {
     let queryResult = request.body.queryResult;
 
     if(queryResult.intent.displayName == 'Search recipe'){
-        let recipeId = queryResult.parameters.recipeId
+        let recipeId = queryResult.parameters.recipeId     
 
-        
-        let recipe = null;
-        
-        RecipeSchema.findOne({id: recipeId})
-            .then( (doc) => {
-                
-                if(doc){
-                    //if mongo already have the recipe
-                    recipe = doc
-                    console.log("recipe document found");
-                } else {
-                    //get recipe from api
-                    axiosClient.get('/recipes/' +  recipeId + '/information')
-                    .then(function (res) {
-                            console.log("recipe downloaded from api")
-                            
-                            recipe = saveRecipe(res.data)
-                    })
-                    .catch(function (error) {
-                            console.log(error);
-                    });
-                }
-                
-                return response.json({
-                    fulfillmentText: "Let's cook " + recipe.title + "! Do you already check that you have all the ingredients or equipment before start cooking?"
-                });
-            })
+        findOrDownloadRecipe(recipeId).then(function(recipe){
+            return response.json({
+                fulfillmentText: "Let's cook " + recipe.title + "! Do you already check that you have all the ingredients or equipment before start cooking?"
+            });
+        }).catch(function(err){
+            return response.json({
+                fulfillmentText: "Error, please try again later."
+            });
+        })
     }
     
 });
@@ -95,6 +77,30 @@ app.post('/classify', (req, res) => {
 });
 
 //--------------------FUNCTIONS--------------------------------------
+
+function findOrDownloadRecipe(recipeId){
+
+    return new Promise(function(resolve, reject){
+        RecipeSchema.findOne({id: recipeId})
+        .then( (doc) => {  
+            if(doc){
+                //if mongo already have the recipe
+                console.log("recipe document found");
+                resolve(doc)
+            } else {
+                //get recipe from api
+                axiosClient.get('/recipes/' +  recipeId + '/information')
+                .then(function (res) {
+                        console.log("recipe downloaded from api")
+                        resolve(saveRecipe(res.data))
+                })
+                .catch(function (error) {
+                        reject(error);
+                });
+            }    
+        })
+    })
+}
 
 
 function saveRecipe(recipe){
