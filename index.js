@@ -1,7 +1,6 @@
 'use strict';
 
-const rapidApiHost = 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com';
-const rapidApiKey = '39d27d6409mshbc42439639330eep198360jsn6727296f5ee8';
+const Constants = require('./constants/constants')
 
 const express = require('express')
 const mongoose = require('mongoose')
@@ -22,10 +21,10 @@ app.use(bodyParser.json())
 //------------SETUP AXIOS-------------------------
 
 let axiosClient = axios.create({
-    baseURL: "https://" + rapidApiHost,
+    baseURL: "https://" + Constants.rapidApiHost,
     timeout: 1000,
-    headers: {'X-RapidAPI-Host': rapidApiHost,
-              'X-RapidAPI-Key': rapidApiKey}
+    headers: {'X-RapidAPI-Host': Constants.rapidApiHost,
+              'X-RapidAPI-Key': Constants.rapidApiKey}
   });
 
 
@@ -52,12 +51,17 @@ mongoose
 
 app.get('/', (req, res) => res.send('KookApp!'))
 
+//Dialogflow webhook
 app.post('/kookapp', (request, response) => {
-    let queryResult = request.body.queryResult;
+    let queryResult = request.body.queryResult
+    let recipeId = request.body.originalDetectIntentRequest.payload.recipeId
+
+    if(recipeId == null){
+        recipeId = queryResult.parameters.recipeId     
+    }
 
     if(queryResult.intent.displayName == 'Search recipe'){
-        let recipeId = queryResult.parameters.recipeId     
-
+       
         findOrDownloadRecipe(recipeId).then(function(recipe){
             return response.json({
                 fulfillmentText: "Let's cook " + recipe.title + "! Do you already check that you have all the ingredients or equipment before start cooking?"
@@ -68,13 +72,43 @@ app.post('/kookapp', (request, response) => {
             });
         })
     }
-    
+
+    if(queryResult.intent.displayName == 'List ingredients'){
+
+    }
+
+    if(queryResult.intent.displayName == 'List equipment'){
+
+    }
+
+    //
+    //  Recipe info answers
+    //
+    if(queryResult.intent.displayName == 'Recipe time'){
+        console.log(queryResult);
+
+        
+    }
 });
 
+//Tensorflow flask api proxy
 app.post('/classify', (req, res) => {
     console.log("classify food img");
     //call flask
 });
+
+app.get('/recipes/:recipeId', (req, res) => {
+    findOrDownloadRecipe(req.params.recipeId).then(function(recipe){
+        recipe.code = '200';
+        return res.json(recipe);
+    }).catch(function(err){
+        return res.json({
+            code: '404',
+            message: 'recipe not found'
+        });
+    })
+});
+//Regular Rest endpoints
 
 //--------------------FUNCTIONS--------------------------------------
 
