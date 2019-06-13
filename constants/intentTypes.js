@@ -2,5 +2,7 @@ module.exports = Object.freeze({
     SearchRecipe: 'Search recipe',
     ListIngredients: 'List ingredients',
     ListEquipment: 'List equipment',
-    RecipeTime: 'Recipe time'
+    RecipeTime: 'Recipe time',
+    RecipeServings: 'Recipe servings',
+    RecipeTitle: 'Recipe title'
 });

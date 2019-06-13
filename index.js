@@ -2,6 +2,7 @@
 
 const Constants = require('./constants/constants')
 const intentTypes = require('./constants/intentTypes')
+const errorTypes = require('./constants/errorTypes')
 
 const express = require('express')
 const mongoose = require('mongoose')
@@ -54,6 +55,15 @@ app.get('/', (req, res) => res.send('KookApp!'))
 
 //Dialogflow webhook
 app.post('/kookapp', (request, response) => {
+
+
+    //If the apikey from headers doesn't match, return unauthorized
+    if(request.headers['api-key'] != Constants.apiKey) {
+        return response.json({
+            fulfillmentText: "Unauthorized."
+        });
+    }
+    
     let queryResult = request.body.queryResult
     let recipeId = request.body.originalDetectIntentRequest.payload.recipeId
 
@@ -81,14 +91,17 @@ app.post('/classify', (req, res) => {
 });
 
 app.get('/recipes/:recipeId', (req, res) => {
+
+    //If the apikey from headers doesn't match, return unauthorized
+    if(req.headers['api-key'] != Constants.apiKey) {
+        return res.json(errorTypes.unauthorized);
+    }
+
     findOrDownloadRecipe(req.params.recipeId).then(function(recipe){
         recipe.code = '200';
         return res.json(recipe);
     }).catch(function(err){
-        return res.json({
-            code: '404',
-            message: 'recipe not found'
-        });
+        return res.json(errorTypes.notFound);
     })
 });
 //Regular Rest endpoints
@@ -108,6 +121,16 @@ function switchIntents(queryResult, recipe) {
                 fulfillmentText: "This recipe takes in average " + recipe.readyInMinutes + " minutes to cook."
             }
             break;
+        case intentTypes.RecipeServings:
+            return {
+                fulfillmentText: "The recipe is for " + recipe.servings + " servings."
+            }
+            break;
+        case intentTypes.RecipeTitle:
+                return {
+                    fulfillmentText: recipe.title
+                }
+                break;
         default:
             return {
                 fulfillmentText: "Sorry, can't understand you."
