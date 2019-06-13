@@ -1,6 +1,7 @@
 'use strict';
 
 const Constants = require('./constants/constants')
+const intentTypes = require('./constants/intentTypes')
 
 const express = require('express')
 const mongoose = require('mongoose')
@@ -60,35 +61,17 @@ app.post('/kookapp', (request, response) => {
         recipeId = queryResult.parameters.recipeId     
     }
 
-    if(queryResult.intent.displayName == 'Search recipe'){
-       
-        findOrDownloadRecipe(recipeId).then(function(recipe){
-            return response.json({
-                fulfillmentText: "Let's cook " + recipe.title + "! Do you already check that you have all the ingredients or equipment before start cooking?"
-            });
-        }).catch(function(err){
-            return response.json({
-                fulfillmentText: "Error, please try again later."
-            });
-        })
-    }
+    findOrDownloadRecipe(recipeId).then(function(recipe){
+        //if recipe found, switch dialogflow intents
+        let intentResponse = switchIntents(queryResult, recipe);
+        //return response
+        return response.json(intentResponse);
 
-    if(queryResult.intent.displayName == 'List ingredients'){
-
-    }
-
-    if(queryResult.intent.displayName == 'List equipment'){
-
-    }
-
-    //
-    //  Recipe info answers
-    //
-    if(queryResult.intent.displayName == 'Recipe time'){
-        console.log(queryResult);
-
-        
-    }
+    }).catch(function(err){
+        return response.json({
+            fulfillmentText: "Error, please try again later."
+        });
+    })
 });
 
 //Tensorflow flask api proxy
@@ -112,7 +95,27 @@ app.get('/recipes/:recipeId', (req, res) => {
 
 //--------------------FUNCTIONS--------------------------------------
 
-function findOrDownloadRecipe(recipeId){
+function switchIntents(queryResult, recipe) {
+    switch (queryResult.intent.displayName) {
+        case intentTypes.SearchRecipe:
+            return {
+                fulfillmentText: "Let's cook " + recipe.title + 
+                    "! Do you already check that you have all the ingredients or equipment before start cooking?"
+            }
+            break;
+        case intentTypes.RecipeTime:
+            return {
+                fulfillmentText: "This recipe takes in average " + recipe.readyInMinutes + " minutes to cook."
+            }
+            break;
+        default:
+            return {
+                fulfillmentText: "Sorry, can't understand you."
+            }
+    }
+}
+
+function findOrDownloadRecipe(recipeId) {
 
     return new Promise(function(resolve, reject){
         RecipeSchema.findOne({id: recipeId})
