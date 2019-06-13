@@ -90,6 +90,7 @@ app.post('/classify', (req, res) => {
     //call flask
 });
 
+//Regular Rest endpoints
 app.get('/recipes/:recipeId', (req, res) => {
 
     //If the apikey from headers doesn't match, return unauthorized
@@ -98,13 +99,31 @@ app.get('/recipes/:recipeId', (req, res) => {
     }
 
     findOrDownloadRecipe(req.params.recipeId).then(function(recipe){
-        recipe.code = '200';
         return res.json(recipe);
     }).catch(function(err){
         return res.json(errorTypes.notFound);
     })
 });
-//Regular Rest endpoints
+
+app.get('/recommendations', (req, res) => {
+    RecipeSchema.find().limit(10)
+    .then( (docs => {
+        let recommendationsList = [];
+
+        docs.forEach((doc) => {
+            recommendationsList.push({
+                id: doc.id,
+                title: doc.title,
+                image: doc.image,
+                servings: doc.servings,
+                readyInMinutes: doc.readyInMinutes,
+                tags: doc.tags
+            })
+        });
+
+        return res.json(recommendationsList);
+    }));
+});
 
 //--------------------FUNCTIONS--------------------------------------
 
@@ -127,10 +146,15 @@ function switchIntents(queryResult, recipe) {
             }
             break;
         case intentTypes.RecipeTitle:
-                return {
-                    fulfillmentText: recipe.title
-                }
-                break;
+            return {
+                fulfillmentText: recipe.title
+            }
+            break;
+        case intentTypes.ListIngredients:
+            return {
+
+            }
+            break;
         default:
             return {
                 fulfillmentText: "Sorry, can't understand you."
@@ -212,6 +236,7 @@ function saveRecipe(recipe){
     var newRecipe = new RecipeSchema({
         id: recipe.id,
         title: recipe.title,
+        image: recipe.image,
         servings: recipe.servings,
         readyInMinutes: recipe.readyInMinutes,
         ingredients: ingredients,

@@ -3,6 +3,7 @@ let mongoose = require('mongoose')
 let recipeSchema = mongoose.Schema({
     id: Number,
     title: String,
+    image: String,
     servings: Number,
     readyInMinutes: Number,
     ingredients: [{
