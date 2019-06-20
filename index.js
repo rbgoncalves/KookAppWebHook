@@ -85,9 +85,32 @@ app.post('/kookapp', (request, response) => {
 });
 
 //Tensorflow flask api proxy
-app.post('/classify', (req, res) => {
-    console.log("classify food img");
-    //call flask
+app.post('/predict', (req, res) => {
+    axios.post('http://localhost:3000/predict', {
+        file: req.body.file,
+      })
+      .then(function (response) {
+        res.json(response)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+});
+
+app.post('/predict/image', (req, res) => {
+    axios.post('http://localhost:3000/predict/image', {
+        file: req.body.file,
+      })
+      .then(function (response) {
+        res.json(response)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+
+    
 });
 
 //Regular Rest endpoints
