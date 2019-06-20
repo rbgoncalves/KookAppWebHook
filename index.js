@@ -56,13 +56,13 @@ app.get('/', (req, res) => res.send('KookApp!'))
 //Dialogflow webhook
 app.post('/kookapp', (request, response) => {
 
-
-    //If the apikey from headers doesn't match, return unauthorized
-    if(request.headers['api-key'] != Constants.apiKey) {
+    //If the apikey not valid, return unauthorized
+    if(!isApiKeyValid(request)) {
         return response.json({
             fulfillmentText: "Unauthorized."
         });
     }
+
     
     let queryResult = request.body.queryResult
     let recipeId = request.body.originalDetectIntentRequest.payload.recipeId
@@ -86,27 +86,39 @@ app.post('/kookapp', (request, response) => {
 
 //Tensorflow flask api proxy
 app.post('/predict', (req, res) => {
+
+    //If the apikey not valid, return unauthorized
+    if(!isApiKeyValid(req)) {
+        return res.json(errorTypes.unauthorized);
+    }
+
     axios.post('http://localhost:3000/predict', {
         file: req.body.file,
       })
       .then(function (response) {
-        res.json(response)
+        return res.json(response.data)
       })
       .catch(function (error) {
-        console.log(error);
+        return res.json(error)
       });
 
 });
 
 app.post('/predict/image', (req, res) => {
+
+    //If the apikey not valid, return unauthorized
+    if(!isApiKeyValid(req)) {
+        return res.json(errorTypes.unauthorized);
+    }
+
     axios.post('http://localhost:3000/predict/image', {
         file: req.body.file,
       })
       .then(function (response) {
-        res.json(response)
+        return res.json(response.data)
       })
       .catch(function (error) {
-        console.log(error);
+        return res.json(error)
       });
 
 
@@ -116,8 +128,9 @@ app.post('/predict/image', (req, res) => {
 //Regular Rest endpoints
 app.get('/recipes/:recipeId', (req, res) => {
 
-    //If the apikey from headers doesn't match, return unauthorized
-    if(req.headers['api-key'] != Constants.apiKey) {
+    
+    //If the apikey not valid, return unauthorized
+    if(!isApiKeyValid(req)) {
         return res.json(errorTypes.unauthorized);
     }
 
@@ -129,6 +142,12 @@ app.get('/recipes/:recipeId', (req, res) => {
 });
 
 app.get('/recommendations', (req, res) => {
+
+     //If the apikey not valid, return unauthorized
+     if(!isApiKeyValid(req)) {
+        return res.json(errorTypes.unauthorized);
+    }
+
     RecipeSchema.find().limit(10)
     .then( (docs => {
         let recommendationsList = [];
@@ -273,6 +292,15 @@ function saveRecipe(recipe){
     return newRecipe   
 }
 
+
+function isApiKeyValid(req) {
+    //If the apikey from headers doesn't match, return false
+    if(req.headers['api-key'] != Constants.apiKey) {
+        return false;
+    }
+
+    return true;
+}
 
 //------------------- RUN SERVER--------------------------------------
 
