@@ -5,6 +5,8 @@ const intentTypes = require('./constants/intentTypes')
 const errorTypes = require('./constants/errorTypes')
 
 const express = require('express')
+const request = require('request')
+const fs = require('fs')
 const multer  = require('multer')
 const FormData = require("form-data");
 const upload = multer({ dest: 'uploads/'})
@@ -89,24 +91,25 @@ app.post('/kookapp', (request, response) => {
 
 //Tensorflow flask api proxy
 app.post('/predict', upload.single('file'), (req, res, next) => {
-
     //If the apikey not valid, return unauthorized
     if(!isApiKeyValid(req)) {
         return res.json(errorTypes.unauthorized);
     }
-
-    const form = new FormData();
-    form.append("file", req.file);
+    const options = {
+        method: "POST",
+        url: "http://localhost:3000/predict",
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        formData : {
+            file: fs.createReadStream(req.file.path) 
+        }
+    };
     
-    axios.post('http://localhost:3000/predict', form, {
-        headers: {'Content-Type': 'multipart/form-data'}
-      })
-      .then(function (response) {
-        return res.json(response.data)
-      })
-      .catch(function (error) {
-        return res.json(error)
-      });
+    request(options, function (err, tfRes) {
+        if(err) res.json(err);
+        return res.json(tfRes.body)
+    });
 });
 
 app.post('/predict/image', upload.single('file'), (req, res, next) => {
