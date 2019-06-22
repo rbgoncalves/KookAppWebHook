@@ -66,6 +66,8 @@ app.post('/kookapp', (request, response) => {
     
     let queryResult = request.body.queryResult
     let recipeId = request.body.originalDetectIntentRequest.payload.recipeId
+    let currentStepNr = request.body.originalDetectIntentRequest.payload.stepNr
+    
 
     if(recipeId == null){
         recipeId = queryResult.parameters.recipeId     
@@ -133,7 +135,7 @@ function switchIntents(queryResult, recipe) {
         case intentTypes.SearchRecipe:
             return {
                 fulfillmentText: "Let's cook " + recipe.title + 
-                    "! Do you already check that you have all the ingredients or equipment before start cooking?"
+                    "! Do you already check that you have all the ingredients or equipment before start cooking?",
             }
             break;
         case intentTypes.RecipeTime:
@@ -169,6 +171,13 @@ function switchIntents(queryResult, recipe) {
                 fulfillmentText: "Equipment list: \n\n" + equipment,
             }
             break;
+        case intentTypes.StartCooking:
+            return {
+                fulfillmentText: "recipe started",
+                payload: {
+                    stepNr: 1
+                }
+            }
         default:
             return {
                 fulfillmentText: "Sorry, can't understand you."
