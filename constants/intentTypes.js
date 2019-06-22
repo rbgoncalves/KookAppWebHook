@@ -4,5 +4,6 @@ module.exports = Object.freeze({
     ListEquipment: 'List equipment',
     RecipeTime: 'Recipe time',
     RecipeServings: 'Recipe servings',
-    RecipeTitle: 'Recipe title'
+    RecipeTitle: 'Recipe title',
+    StartCooking: 'Start cooking'
 });

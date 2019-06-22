@@ -152,8 +152,21 @@ function switchIntents(queryResult, recipe) {
             }
             break;
         case intentTypes.ListIngredients:
+            let ingredients = "";
+            recipe.ingredients.forEach((i) => {
+                ingredients += "• " + i.amount + " " + i.unit + " " + i.name + "\n";
+            })
             return {
-
+                fulfillmentText: "Here are the ingredients that you need: \n\n" + ingredients,
+            }
+            break;
+        case intentTypes.ListEquipment:
+            let equipment = "";
+            recipe.equipment.forEach((e) => {
+                equipment += "• " + e.name+ "\n";
+            })
+            return {
+                fulfillmentText: "Equipment list: \n\n" + equipment,
             }
             break;
         default:
