@@ -72,4 +72,4 @@ In `sudo nano /etc/systemd/system/mongodb.service`, paste the follow
 `pm2 start webhook.config.js`
 
 11. forward port 8080 to 80
-`iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8080`
+`iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8080`
