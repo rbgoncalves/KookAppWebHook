@@ -75,11 +75,13 @@ app.post('/kookapp', (request, response) => {
 
     findOrDownloadRecipe(recipeId).then(function(recipe){
         //if recipe found, switch dialogflow intents
-        let intentResponse = switchIntents(queryResult, recipe);
+        let intentResponse = switchIntents(queryResult, recipe, currentStepNr);
         //return response
         return response.json(intentResponse);
 
     }).catch(function(err){
+        console.log(err);
+        
         return response.json({
             fulfillmentText: "Error, please try again later."
         });
@@ -130,7 +132,12 @@ app.get('/recommendations', (req, res) => {
 
 //--------------------FUNCTIONS--------------------------------------
 
-function switchIntents(queryResult, recipe) {
+function switchIntents(queryResult, recipe, currentStepNr) {
+    let step;
+
+    console.log(queryResult.intent.displayName);
+    
+
     switch (queryResult.intent.displayName) {
         case intentTypes.SearchRecipe:
             return {
@@ -172,12 +179,71 @@ function switchIntents(queryResult, recipe) {
             }
             break;
         case intentTypes.StartCooking:
-            return {
-                fulfillmentText: "recipe started",
-                payload: {
-                    stepNr: 1
+            if(currentStepNr != 0) {
+                return {
+                    fulfillmentText: "You have already started the recipe."
                 }
             }
+            step = getNextStep(recipe, currentStepNr)
+            return {
+                fulfillmentText: step.step,
+                payload: {
+                    stepNr: ++currentStepNr
+                }
+            }
+            break;
+        case intentTypes.NextStep:
+            //If the user is currently on the last step
+            if(currentStepNr == recipe.steps.length){
+                return {
+                    fulfillmentText: "Congrats, you've conclude this recipe! Do you have any question?",
+                    payload: {
+                        stepNr: 0
+                    }
+                }
+            }
+            step = getNextStep(recipe, currentStepNr)
+            return {
+                fulfillmentText: step.step,
+                payload: {
+                    stepNr: ++currentStepNr
+                }
+            }
+            break;
+        case intentTypes.PreviousStep:
+            //if the user is currently on the first step
+            if(currentStepNr == 1){
+                return {
+                    fulfillmentText: "There are no previous steps, we just started right now!"
+                }
+            }
+            step = getPreviousStep(recipe, currentStepNr)
+            return {
+                fulfillmentText: step.step,
+                payload: {
+                    stepNr: --currentStepNr
+                }
+            }    
+            break;
+        case intentTypes.RepeatStep:       
+            let stepNrToRepeat = currentStepNr - 1;
+            return {
+                fulfillmentText: recipe.steps[stepNrToRepeat].step
+            }
+            break;
+        case intentTypes.IsVegetarian:
+            let msg;
+            if(recipe.tags.some(t => t == 'vegan')){
+                msg = "This recipe is vegan."
+            } else if(recipe.tags.some(t => t == 'vegetarian')) {
+                msg = "This is a vegetarian recipe."
+            } else {
+                msg = "Nop, this recipe is not vegetarian."
+            }
+            return {
+                fulfillmentText: msg
+            }
+            break;
         default:
             return {
                 fulfillmentText: "Sorry, can't understand you."
@@ -207,6 +273,16 @@ function findOrDownloadRecipe(recipeId) {
             }    
         })
     })
+}
+
+function getNextStep(recipe, currentStepNr) {
+    return recipe.steps[currentStepNr++]
+}
+
+function getPreviousStep(recipe, currentStepNr) {
+    console.log(currentStepNr);
+    
+    return recipe.steps[currentStepNr-2]
 }
 
 
@@ -246,6 +322,9 @@ function saveRecipe(recipe){
 
     var tags = [];
 
+    if(recipe.vegan) {
+        tags.push("vegan")
+    }
     if(recipe.vegetarian) {
         tags.push("vegetarian")
     }

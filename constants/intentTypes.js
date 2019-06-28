@@ -5,5 +5,11 @@ module.exports = Object.freeze({
     RecipeTime: 'Recipe time',
     RecipeServings: 'Recipe servings',
     RecipeTitle: 'Recipe title',
-    StartCooking: 'Start cooking'
+    StartCooking: 'Start cooking',
+    NextStep: 'Next step',
+    PreviousStep: 'Previous step',
+    RepeatStep: 'Repeat step',
+    IsVegetarian: 'Is vegetarian',
+
+
 });
