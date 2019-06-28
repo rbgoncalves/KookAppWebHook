@@ -8,7 +8,8 @@ const express = require('express')
 const mongoose = require('mongoose')
 const axios = require('axios')
 const bodyParser = require('body-parser')
-const http = require('https')
+var fs = require('fs')
+var https = require('https')
 const RecipeSchema = require('./models/recipe')
 
 let errorResponse = {
@@ -366,4 +367,9 @@ function isApiKeyValid(req) {
 
 const port = 8080
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+//------------CREATE HTTPS SERVER----------------
+https.createServer({
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert')
+}, app)
+.listen(port, () => console.log(`Kookapp webhook listening on port ${port}!`))
