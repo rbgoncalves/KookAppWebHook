@@ -369,7 +369,8 @@ const port = 8080
 
 //------------CREATE HTTPS SERVER----------------
 https.createServer({
-    key: fs.readFileSync('server.key'),
-    cert: fs.readFileSync('server.cert')
+    key: fs.readFileSync('./https/key.pem'),
+    cert: fs.readFileSync('./https/cert.pem'),
+    passphrase: Constants.passphrase
 }, app)
 .listen(port, () => console.log(`Kookapp webhook listening on port ${port}!`))
