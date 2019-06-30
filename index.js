@@ -200,7 +200,8 @@ function switchIntents(queryResult, recipe, currentStepNr) {
                 return {
                     fulfillmentText: "Congrats, you've conclude this recipe! Do you have any question?",
                     payload: {
-                        stepNr: 0
+                        stepNr: 0,
+                        stop: true
                     }
                 }
             }
@@ -244,6 +245,30 @@ function switchIntents(queryResult, recipe, currentStepNr) {
             }
             return {
                 fulfillmentText: msg
+            }
+            break;
+        case intentTypes.StopCooking: 
+            return {
+                fulfillmentText: "See you in the next recipe!",
+                payload: {
+                    stop: true
+                }
+            }
+            break;
+        case intentTypes.StepCount: 
+            return {
+                fulfillmentText: "This recipe have " + recipe.steps.length + " steps."
+            }
+            break;
+        case intentTypes.CurrentStep: 
+            if(currentStepNr == 0) {
+                return {
+                    fulfillmentText: "You didn't start cooking yet!"
+                }
+            }
+            return {
+                fulfillmentText: "Currently, you are in step " + currentStepNr + 
+                    " out of " + recipe.steps.length + " steps."
             }
             break;
         default:

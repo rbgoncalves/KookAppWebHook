@@ -10,6 +10,7 @@ module.exports = Object.freeze({
     PreviousStep: 'Previous step',
     RepeatStep: 'Repeat step',
     IsVegetarian: 'Is vegetarian',
-
-
+    StopCooking: 'Stop cooking',
+    StepCount: "Step count",
+    CurrentStep: "Current step"
 });
